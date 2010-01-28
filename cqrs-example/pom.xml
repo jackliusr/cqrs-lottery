@@ -112,12 +112,13 @@
 			</resource>
 			<resource>
 				<filtering>false</filtering>
-				<directory>src/main/java</directory>
+				<directory>src/main/scala</directory>
 				<includes>
 					<include>**</include>
 				</includes>
 				<excludes>
 					<exclude>**/*.java</exclude>
+					<exclude>**/*.scala</exclude>
 				</excludes>
 			</resource>
 		</resources>
@@ -128,12 +129,13 @@
 			</testResource>
 			<testResource>
 				<filtering>false</filtering>
-				<directory>src/test/java</directory>
+				<directory>src/test/scala</directory>
 				<includes>
 					<include>**</include>
 				</includes>
 				<excludes>
 					<exclude>**/*.java</exclude>
+					<exclude>**/*.scala</exclude>
 				</excludes>
 			</testResource>
 		</testResources>
@@ -143,10 +145,10 @@
                                 <version>2.4.3</version>
         <configuration>
           <includes>
-            <include>**/When*.java</include>
-            <include>**/Given*.java</include>
-            <include>**/*Test.java</include>
-            <include>**/Test*.java</include>
+            <include>**/When*.scala</include>
+            <include>**/Given*.scala</include>
+            <include>**/*Test.scala</include>
+            <include>**/Test*.scala</include>
           </includes>
         </configuration>
 
