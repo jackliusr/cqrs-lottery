@@ -7,7 +7,4 @@ import com.xebia.cqrs.domain.VersionedId;
 abstract class LotteryEvent(
 	lotteryId : VersionedId,
 	entityId : Object
-) extends Event(lotteryId, entityId) {
-  
-    def getLotteryId() = getAggregateRootId();
-}
+) extends Event(lotteryId, entityId)

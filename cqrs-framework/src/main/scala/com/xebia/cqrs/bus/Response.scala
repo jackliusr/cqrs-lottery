@@ -4,16 +4,7 @@ import collection.mutable.ArrayBuffer
 import org.apache.commons.lang.builder.{ToStringStyle, ToStringBuilder}
 
 
-class Response() {
-  val messages = new ArrayBuffer[AnyRef]();
-
-  def this(messages: Seq[AnyRef]) {
-    this ()
-    this.messages ++= messages
-  }
-
-  def getMessages() = messages;
-
+class Response(messages : Seq[AnyRef]) {
   def containsReplyOfType(t: Class[_ <: AnyRef]) = messages.exists { t.isInstance(_) }
 
   def getReplyOfType[T](t: Class[T]) = {

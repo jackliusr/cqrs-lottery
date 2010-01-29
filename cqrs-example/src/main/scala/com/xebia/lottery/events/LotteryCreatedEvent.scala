@@ -9,6 +9,6 @@ import com.xebia.lottery.shared.LotteryInfo;
 class LotteryCreatedEvent(
   lotteryId : VersionedId, 
   val info : LotteryInfo
-) extends LotteryEvent(lotteryId, lotteryId.getId()) {
+) extends LotteryEvent(lotteryId, lotteryId.id) {
     Validate.notNull(info, "info is required");
 }

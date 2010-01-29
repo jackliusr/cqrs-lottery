@@ -9,7 +9,7 @@ class FakeAggregateRoot(id : VersionedId) extends AggregateRoot(id) {
     }
 
     def greetPerson(name : String) {
-        apply(new GreetingEvent(getVersionedId(), "Hi " + name));
+        apply(new GreetingEvent(versionedId, "Hi " + name));
         notify(new GreetingNotification("Greeted " + name));
     }
     

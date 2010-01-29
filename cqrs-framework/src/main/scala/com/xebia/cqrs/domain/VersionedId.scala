@@ -26,10 +26,6 @@ case class VersionedId(
   Validate.notNull(id, "id is required");
   Validate.isTrue(version >= VersionedId.INITIAL_VERSION, "version must be greater than or equal to INITIAL_VERSION");
 
-  def getId() = id;
-
-  def getVersion() = version
-
   def isForInitialVersion() = (version == VersionedId.INITIAL_VERSION)
 
   def isForLatestVersion() = (version == VersionedId.LATEST_VERSION)

@@ -52,6 +52,6 @@ trait Bus {
    *
    * @return null if no message is being processed.
    */
-  def getCurrentMessage(): AnyRef;
+  def currentMessage : AnyRef;
 
 }

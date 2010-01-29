@@ -10,8 +10,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
-
-
 abstract class AbstractEventStoreTest {
     
     val ID_1 = UUID.randomUUID();
@@ -237,20 +235,11 @@ abstract class AbstractEventStoreTest {
     }
     
     class FakeEventSource(
-    	typee : String,
+    	val aType : String,
         val version : Long,
         val timestamp : Long,
         val events : List[String]
-    ) extends EventSource[String] {
-        def getType() = typee
-
-        def getVersion() = version
-        
-        def getTimestamp() = timestamp
-        
-        def getEvents() = events
-
-    }
+    ) extends EventSource[String]
     
     final class FakeEventSink(
         expectedType : String,
@@ -289,7 +278,5 @@ abstract class AbstractEventStoreTest {
             expectedEvents.zip(actualEvents.toList).foreach { 
               case (a, b) => assertEquals(a, b) }
         }
-        
     }
-    
 }

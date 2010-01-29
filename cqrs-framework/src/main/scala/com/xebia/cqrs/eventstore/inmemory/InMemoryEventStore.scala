@@ -14,51 +14,35 @@ import com.xebia.cqrs.eventstore.EventStore;
 
 object InMemoryEventStore {
 		class EventStream[E](
-				private val typee : String,
-				private var version : Long,
-				private var timestamp : Long,
-				private val initialEvents : List[E]
+				val aType : String,
+				var version : Long,
+				var timestamp : Long,
+				val initialEvents : List[E]
 		) {
 			val events = new mutable.ArrayBuffer[VersionedEvent[E]]
 	        addEvents(initialEvents);
 	
-	        def sendEventsAtVersionToSink(version : Long, sink : EventSink[E]) {
-	            events
-	              .takeWhile { _.getVersion() <= version } match {
+	        private[InMemoryEventStore] def sendEventsToSink(
+	          shouldEventBeSent : VersionedEvent[E] => Boolean, sink: EventSink[E]
+	        ) {
+	        	events
+	              .takeWhile { shouldEventBeSent } match {
 	                case list => 
-	                  sendEventsToSink(list.map { _.getEvent() }, list.lastOption.getOrElse(null), sink)
+	                  val lastEvent = list.lastOption.getOrElse({
+	                	  throw new EmptyResultDataAccessException("no event found for specified version or timestamp", 1);
+	                  })
+	                  sink.setVersion(lastEvent.version);
+	                  sink.setTimestamp(lastEvent.timestamp);
+	                  sink.setEvents(list.map { _.event });
 	            }
 	        }
-	
-	        def sendEventsAtTimestampToSink(timestamp : Long, sink : EventSink[E]) {
-	          events
-	              .takeWhile { _.getTimestamp() <= timestamp } match {
-	                case list => 
-	                  sendEventsToSink(list.map { _.getEvent() }, list.lastOption.getOrElse(null), sink)
-	            }
-	        }
-	
-	        private def sendEventsToSink(events : Seq[E], lastEvent: VersionedEvent[E], sink: EventSink[E]) {
-	            if (lastEvent == null) {
-	                throw new EmptyResultDataAccessException("no event found for specified version or timestamp", 1);
-	            }
-	            sink.setVersion(lastEvent.getVersion());
-	            sink.setTimestamp(lastEvent.getTimestamp());
-	            sink.setEvents(events);
-	        }
-	
-	        def getType() = typee
-	        
-	        def getVersion() = version
-	
+         
 	        def setVersion(version : Long) {
 	            if (this.version > version) {
 	                throw new IllegalArgumentException("version cannot decrease");
 	            }
 	            this.version = version;
 	        }
-	        
-	        def getTimestamp() = timestamp 
 	        
 	        def setTimestamp(timestamp : Long) {
 	            if (this.timestamp > timestamp) {
@@ -74,16 +58,15 @@ object InMemoryEventStore {
 	        }
 	}
   
-      private[InMemoryEventStore] class VersionedEvent[E](
-          version : Long,
-        timestamp : Long,
-        event : E
-    ) {
-        def getVersion() = version
-        
-        def getTimestamp() = timestamp
-        
-        def getEvent() = event
+    private[InMemoryEventStore] class VersionedEvent[E](
+        val version : Long,
+        val timestamp : Long,
+        val event : E
+    )
+    
+    private[InMemoryEventStore] object VersionedEvent {
+    	def atVersion[E](version : Long) = (event : VersionedEvent[E]) => event.version <= version
+    	def atTimestamp[E](timestamp : Long) = (event : VersionedEvent[E]) => event.timestamp <= timestamp
     }
 }
 
@@ -91,7 +74,8 @@ object InMemoryEventStore {
  * Stores and tracks ordered streams of events.
  */
 class InMemoryEventStore[E] extends EventStore[E] {
-    
+	import InMemoryEventStore.VersionedEvent
+  
     val eventStreams = new mutable.HashMap[UUID, InMemoryEventStore.EventStream[E]]();
     
     def createEventStream(streamId: UUID, source: EventSource[E]) {
@@ -101,51 +85,51 @@ class InMemoryEventStore[E] extends EventStore[E] {
         eventStreams.put(
           streamId, 
           new InMemoryEventStore.EventStream[E](
-            source.getType(), 
-            source.getVersion(), 
-            source.getTimestamp(), 
-            source.getEvents().toList));
+            source.aType, 
+            source.version, 
+            source.timestamp, 
+            source.events.toList));
     }
     
     def storeEventsIntoStream(streamId: UUID, expectedVersion: Long, source: EventSource[E]) {
         val stream = getStream(streamId);
-        if (stream.getVersion() != expectedVersion) {
-            throw new OptimisticLockingFailureException("stream " + streamId + ", actual version: " + stream.getVersion() + ", expected version: " + expectedVersion);
+        if (stream.version != expectedVersion) {
+            throw new OptimisticLockingFailureException("stream " + streamId + ", actual version: " + stream.version + ", expected version: " + expectedVersion);
         }
-        stream.setVersion(source.getVersion());
-        stream.setTimestamp(source.getTimestamp());
-        stream.addEvents(source.getEvents());
+        stream.setVersion(source.version);
+        stream.setTimestamp(source.timestamp);
+        stream.addEvents(source.events);
     }
 
     def loadEventsFromLatestStreamVersion(streamId: UUID, sink: EventSink[E]) {
         val stream = getStream(streamId);
-        sink.setType(stream.getType());
-        stream.sendEventsAtVersionToSink(stream.getVersion(), sink);
+        sink.setType(stream.aType);
+        stream.sendEventsToSink(VersionedEvent.atVersion(stream.version), sink);
     }
     
     def loadEventsFromExpectedStreamVersion(streamId: UUID, expectedVersion: Long, sink: EventSink[E]) {
         val stream = getStream(streamId);
-        if (stream.getVersion() != expectedVersion) {
-            throw new OptimisticLockingFailureException("stream " + streamId + ", actual version: " + stream.getVersion() + ", expected version: " + expectedVersion);
+        if (stream.version != expectedVersion) {
+            throw new OptimisticLockingFailureException("stream " + streamId + ", actual version: " + stream.version + ", expected version: " + expectedVersion);
         }
-        sink.setType(stream.getType());
-        stream.sendEventsAtVersionToSink(stream.getVersion(), sink);
+        sink.setType(stream.aType);
+        stream.sendEventsToSink(VersionedEvent.atVersion(stream.version), sink);
     }
     
     def loadEventsFromStreamUptoVersion(streamId: UUID, version: Long, sink: EventSink[E]) {
         val stream = getStream(streamId);
-        sink.setType(stream.getType());
+        sink.setType(stream.aType);
 
-        val actualVersion = Math.min(stream.getVersion(), version);
-        stream.sendEventsAtVersionToSink(actualVersion, sink);
+        val actualVersion = Math.min(stream.version, version);
+        stream.sendEventsToSink(VersionedEvent.atVersion(actualVersion), sink);
     }
     
     def loadEventsFromStreamUptoTimestamp(streamId: UUID, timestamp: Long, sink: EventSink[E]) {
         val stream = getStream(streamId);
-        sink.setType(stream.getType());
+        sink.setType(stream.aType);
 
-        val actualTimestamp = Math.min(stream.getTimestamp(), timestamp);
-        stream.sendEventsAtTimestampToSink(actualTimestamp, sink);
+        val actualTimestamp = Math.min(stream.timestamp, timestamp);
+        stream.sendEventsToSink(VersionedEvent.atTimestamp(actualTimestamp), sink);
     }
 
     def getStream(streamId: UUID) : InMemoryEventStore.EventStream[E] = {

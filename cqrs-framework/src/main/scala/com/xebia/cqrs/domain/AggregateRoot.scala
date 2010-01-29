@@ -4,21 +4,21 @@ import java.util.UUID;
 
 abstract class AggregateRoot(
     versionedId : VersionedId
-) extends Entity[UUID](versionedId.getId(), new Aggregate(versionedId)) {
+) extends Entity[UUID](versionedId.id, new Aggregate(versionedId)) {
     
     def loadFromHistory(events : Seq[_ <: Event] ) {
         aggregate.loadFromHistory(events);
     }
 
-    def getNotifications() = aggregate.getNotifications();
+    def notifications = aggregate.notifications;
 
     def clearNotifications() {
         aggregate.clearNotifications();
     }
 
-    def getUnsavedEvents() = aggregate.getUnsavedEvents();
+    def unsavedEvents = aggregate.unsavedEvents;
 
-    def getVersionedId() = aggregate.getVersionedId();
+    def versionedId = aggregate.versionedId;
 
     def clearUnsavedEvents() {
         aggregate.clearUnsavedEvents();

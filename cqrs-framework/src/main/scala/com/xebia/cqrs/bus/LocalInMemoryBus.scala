@@ -13,7 +13,7 @@ object LocalInMemoryBus {
   private val LOG = Logger.getLogger(classOf[LocalInMemoryBus]);
   private class CurrentMessageInformation(
           private[LocalInMemoryBus] val currentMessage: AnyRef
-          ) {
+  ) {
     val responses = new mutable.ArrayBuffer[Response]();
 
     def addReplies(messages: Seq[AnyRef]) {
@@ -80,7 +80,7 @@ abstract class LocalInMemoryBus(
 
   def reply(messages: Seq[AnyRef]) {
     transactional {
-	    if (getCurrentMessage() == null) {
+	    if (currentMessage == null) {
 	      throw new MessageHandlingException("no current message to reply to");
 	    }
 	
@@ -98,13 +98,13 @@ abstract class LocalInMemoryBus(
   def publish(messages: Seq[AnyRef]) {
     transactional {
 	    eventQueue.get() ++= messages;
-	    if (getCurrentMessage() == null) {
+	    if (currentMessage == null) {
 	      dispatchAllQueuedMessages();
 	    }
     }
   }
 
-  def getCurrentMessage() = transactional { state.get().currentMessage; }
+  def currentMessage = transactional { state.get().currentMessage; }
   
   def dispatchAllQueuedMessages() {
     transactional {
@@ -131,7 +131,7 @@ abstract class LocalInMemoryBus(
 	      invokeHandlers(message);
 	      invokeAfterHandleMessage();
       }
-      return state.get().responses;
+      state.get().responses;
     } finally {
 	  state.set(savedState);
     }

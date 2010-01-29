@@ -6,11 +6,11 @@ package com.xebia.cqrs.eventstore;
  * event sources.
  */
 trait EventSource[EventType] {
-    def getType() : String ;
+    def aType : String
 
-    def getVersion() : Long;
+    def version : Long
     
-    def getTimestamp() : Long;
+    def timestamp : Long
 
-    def getEvents() : Seq[EventType] ;
+    def events : Seq[EventType]
 }

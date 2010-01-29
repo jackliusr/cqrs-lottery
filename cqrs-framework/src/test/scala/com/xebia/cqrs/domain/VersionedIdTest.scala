@@ -16,8 +16,8 @@ class VersionedIdTest {
     
     @Test
     def shouldStoreIdAndVersion() {
-        assertEquals(FOO, a.getId());
-        assertEquals(3L, a.getVersion());
+        assertEquals(FOO, a.id);
+        assertEquals(3L, a.version);
     }
     
     @Test

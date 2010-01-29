@@ -24,34 +24,18 @@ object JdbcEventStore {
     val LOG = Logger.getLogger(classOf[JdbcEventStore[_]]);
     
     class EventStream(
-        id: UUID,
-        typee : String,
-        version: Long,
-        timestamp: Long,
-        nextEventSequence: Int
-    ) {
-        def getId() = id
-
-        def getType() = typee
-
-        def getVersion() = version
-
-        def getTimestamp() = timestamp
-        
-        def getNextEventSequence() = nextEventSequence
-    }
+        val id: UUID,
+        val aType : String,
+        val version: Long,
+        val timestamp: Long,
+        val nextEventSequence: Int
+    )
     
     class StoredEvent[E](
-          version : Long,
-          timestamp : Long,
-          event : E
-    ) {    
-        def getVersion() = version
-
-        def getTimestamp() = timestamp
-
-        def getEvent() = event
-    }
+          val version : Long,
+          val timestamp : Long,
+          val event : E
+    )
 }
 
 class JdbcEventStore[E](
@@ -72,58 +56,50 @@ class JdbcEventStore[E](
 
     @throws(classOf[DataIntegrityViolationException]) 
     def createEventStream(streamId: UUID, source: EventSource[E]) {
-        val version = source.getVersion();
-        val timestamp = source.getTimestamp();
-        val events = source.getEvents();
-        val v = 
         jdbcTemplate.update(
         		"insert into event_stream (id, type, version, timestamp, next_event_sequence) values (?, ?, ?, ?, ?)",
                 streamId.toString(), 
-                source.getType(),
-                long2Long(version),
-                new Date(timestamp),
-                int2Integer(events.size));
-        saveEvents(streamId, version, timestamp, 0, events);
+                source.aType,
+                long2Long(source.version),
+                new Date(source.timestamp),
+                int2Integer(source.events.size));
+        saveEvents(streamId, source.version, source.timestamp, 0, source.events);
     }
     
     def storeEventsIntoStream(streamId: UUID , expectedVersion: Long, source: EventSource[E]) {
-        val version = source.getVersion();
-        val timestamp = source.getTimestamp();
-        val events = source.getEvents();
-        
         val stream = getEventStream(streamId);
         val count = jdbcTemplate.update("update event_stream set version = ?, timestamp = ?, next_event_sequence = ? where id = ? and version = ?",
-                long2Long(version),
-                new Date(timestamp),
-                (stream.getNextEventSequence() + events.size).toString,
+                long2Long(source.version),
+                new Date(source.timestamp),
+                (stream.nextEventSequence + source.events.size).toString,
                 streamId.toString(), 
                 long2Long(expectedVersion));
         if (count != 1) {
-            throw new OptimisticLockingFailureException("id: " + streamId + "; actual: " + stream.getVersion() + "; expected: " + expectedVersion);
+            throw new OptimisticLockingFailureException("id: " + streamId + "; actual: " + stream.version + "; expected: " + expectedVersion);
         }
-        if (version < stream.getVersion()) {
+        if (source.version < stream.version) {
             throw new IllegalArgumentException("version cannot decrease");
         }
-        if (timestamp < stream.getTimestamp()) {
+        if (source.timestamp < stream.timestamp) {
             throw new IllegalArgumentException("timestamp cannot decrease");
         }
         
-        saveEvents(streamId, version, timestamp, stream.getNextEventSequence(), events);
+        saveEvents(streamId, source.version, source.timestamp, stream.nextEventSequence, source.events);
     }
 
     def loadEventsFromLatestStreamVersion(streamId : UUID, sink: EventSink[E]) {
         val stream = getEventStream(streamId);
-        val storedEvents = loadEventsUptoVersion(stream, stream.getVersion());
+        val storedEvents = loadEventsUptoVersion(stream, stream.version);
 
         sendEventsToSink(stream, storedEvents, sink);
     }
 
     def loadEventsFromExpectedStreamVersion(streamId: UUID, expectedVersion: Long, sink: EventSink[E]) {
         val stream = getEventStream(streamId);
-        if (stream.getVersion() != expectedVersion) {
-            throw new OptimisticLockingFailureException("id: " + streamId + "; actual: " + stream.getVersion() + "; expected: " + expectedVersion);
+        if (stream.version != expectedVersion) {
+            throw new OptimisticLockingFailureException("id: " + streamId + "; actual: " + stream.version + "; expected: " + expectedVersion);
         }
-        val storedEvents = loadEventsUptoVersion(stream, stream.getVersion());
+        val storedEvents = loadEventsUptoVersion(stream, stream.version);
 
         sendEventsToSink(stream, storedEvents, sink);
     }
@@ -166,11 +142,11 @@ class JdbcEventStore[E](
         jdbcTemplate.query(
             "select version, timestamp, data from event where event_stream_id = ? and version <= ? order by sequence_number", 
             new StoredEventRowMapper(),
-            stream.getId().toString(), 
+            stream.id.toString(), 
             long2Long(version)
         ) match {
               case storedEvents if storedEvents.isEmpty() =>
-                throw new EmptyResultDataAccessException("no events found for stream " + stream.getId() + " for version " + version, 1);
+                throw new EmptyResultDataAccessException("no events found for stream " + stream.id + " for version " + version, 1);
               case storedEvents => 
                 List[StoredEvent[E]](storedEvents.toArray(new Array[StoredEvent[E]](0)): _*)
         }
@@ -180,21 +156,21 @@ class JdbcEventStore[E](
         jdbcTemplate.query(
             "select version, timestamp, data from event where event_stream_id = ? and timestamp <= ? order by sequence_number", 
             new StoredEventRowMapper(),
-            stream.getId().toString(), 
+            stream.id.toString(), 
             new Date(timestamp)
         ) match {
                 case storedEvents if storedEvents.isEmpty =>
-                  throw new EmptyResultDataAccessException("no events found for stream " + stream.getId() + " for timestamp " + timestamp, 1);
+                  throw new EmptyResultDataAccessException("no events found for stream " + stream.id + " for timestamp " + timestamp, 1);
                 case storedEvents => 
                   List[StoredEvent[E]](storedEvents.toArray(new Array[StoredEvent[E]](0)): _*)
         }
     }
 
     private def sendEventsToSink(stream: EventStream, storedEvents: List[StoredEvent[E]], sink: EventSink[E]) {
-        sink.setType(stream.getType());
-        sink.setVersion(storedEvents.last.getVersion());
-        sink.setTimestamp(storedEvents.last.getTimestamp());
-        sink.setEvents(storedEvents.map { _.getEvent() });
+        sink.setType(stream.aType);
+        sink.setVersion(storedEvents.last.version);
+        sink.setTimestamp(storedEvents.last.timestamp);
+        sink.setEvents(storedEvents.map { _.event });
     }
 
     private final class EventStreamRowMapper private[JdbcEventStore](

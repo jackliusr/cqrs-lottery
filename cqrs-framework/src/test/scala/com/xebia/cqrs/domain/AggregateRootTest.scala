@@ -25,14 +25,14 @@ class AggregateRootTest {
     
     @Test
     def shouldTrackUnsavedEvents() {
-        assertEquals(new GreetingEvent(subject.getVersionedId(), "Hi Erik"), subject.getUnsavedEvents().first);
+        assertEquals(new GreetingEvent(subject.versionedId, "Hi Erik"), subject.unsavedEvents.first);
     }
     
     @Test
     def shouldClearUnsavedChanges() {
         subject.clearUnsavedEvents();
         
-        assertEquals(0, subject.getUnsavedEvents().size);
+        assertEquals(0, subject.unsavedEvents.size);
     }
     
 }

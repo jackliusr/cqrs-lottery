@@ -30,7 +30,7 @@ class CustomersPage extends AbstractLotteryPage {
                 item.add(new BookmarkablePageLink[CustomerTicketsPage](
                   "tickets", 
                   classOf[CustomerTicketsPage], 
-                  CustomerTicketsPage.link(item.getModelObject().customerId.getId())));
+                  CustomerTicketsPage.link(item.getModelObject().customerId.id)));
             }
         });
     add(new FeedbackPanel("feedback"));
@@ -67,7 +67,7 @@ class CustomersPage extends AbstractLotteryPage {
             System.err.println("response: " + response);
             response
               .getRepliesOfType(classOf[ValidationError])
-              .foreach { validationError => error(validationError.getErrorMessage()) }
+              .foreach { validationError => error(validationError.errorMessage) }
             
             if (!hasError()) {
                 setResponsePage(classOf[CustomersPage]);

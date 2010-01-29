@@ -11,7 +11,7 @@ class DrawLotteryCommandHandler(
     
     def apply(any : AnyRef) {
     	val message = any.asInstanceOf[DrawLotteryCommand]
-        val lottery = repository.getByVersionedId(classOf[Lottery], message.getLotteryId());
+        val lottery = repository.getByVersionedId(classOf[Lottery], message.lotteryId);
         lottery.draw();
     }
 

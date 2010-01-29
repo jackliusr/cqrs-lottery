@@ -14,8 +14,8 @@ class LotteryCreatedEventHandler(
     	val message = any.asInstanceOf[LotteryCreatedEvent]
         val info = message.info;
         jdbcTemplate.update("insert into lottery(id, version, name, drawing_timestamp, prize_amount, ticket_price) values (?, ?, ?, ?, ?, ?)", 
-                message.getAggregateRootId().getId(), 
-                long2Long(message.getAggregateRootId().getVersion()), 
+                message.aggregateRootId.id, 
+                long2Long(message.aggregateRootId.version), 
                 info.name, 
                 info.drawingTimestamp, 
                 double2Double(info.prizeAmount),

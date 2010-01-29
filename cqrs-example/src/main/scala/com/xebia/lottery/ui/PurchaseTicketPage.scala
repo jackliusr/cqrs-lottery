@@ -43,9 +43,9 @@ class PurchaseTicketPage extends AbstractLotteryPage {
             val response = bus.sendAndWaitForResponse(new PurchaseTicketCommand(selectedLottery.lotteryId, selectedCustomer.customerId));
             response
               .getRepliesOfType(classOf[ValidationError])
-              .foreach { validationError => error(validationError.getErrorMessage()) }
+              .foreach { validationError => error(validationError.errorMessage) }
             if (!hasError()) {
-                setResponsePage(classOf[CustomerTicketsPage], CustomerTicketsPage.link(selectedCustomer.customerId.getId()));
+                setResponsePage(classOf[CustomerTicketsPage], CustomerTicketsPage.link(selectedCustomer.customerId.id));
             }
         }
 

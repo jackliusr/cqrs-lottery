@@ -15,15 +15,15 @@ object XStreamEventSerializerTest {
 
     val EVENT = new LotteryTicketPurchasedEvent(LOTTERY_ID, CUSTOMER_ID, "7122");
     val SERIALIZED_EVENT = "<event.LotteryTicketPurchasedEvent>\n" +
-    				"  <entityId class=\"uuid\">" + LOTTERY_ID.getId() + "</entityId>\n" + 
+    				"  <entityId class=\"uuid\">" + LOTTERY_ID.id + "</entityId>\n" + 
                     "  <aggregateRootId>\n" +
-                    "    <version>" + LOTTERY_ID.getVersion() + "</version>\n" +
-                    "    <id>" + LOTTERY_ID.getId() + "</id>\n" +
+                    "    <version>" + LOTTERY_ID.version + "</version>\n" +
+                    "    <id>" + LOTTERY_ID.id + "</id>\n" +
                     "  </aggregateRootId>\n" +
                     "  <ticketNumber>7122</ticketNumber>\n" +
                     "  <customerId>\n" +
-                    "    <version>" + CUSTOMER_ID.getVersion() + "</version>\n" +
-                    "    <id>" + CUSTOMER_ID.getId() + "</id>\n" +
+                    "    <version>" + CUSTOMER_ID.version + "</version>\n" +
+                    "    <id>" + CUSTOMER_ID.id + "</id>\n" +
                     "  </customerId>\n" +
                     "</event.LotteryTicketPurchasedEvent>";  
 }

@@ -15,9 +15,9 @@ class CreateCustomerCommandHandler(
     	val message = any.asInstanceOf[CreateCustomerCommand]
         val customer = 
           customerFactory.create(
-            message.getCustomerId(), 
-            message.getInfo(), 
-            message.getInitialAccountBalance());
+            message.customerId, 
+            message.info, 
+            message.initialAccountBalance);
         repository.add(customer.getOrElse{ error("Unable to create customer") });
     }
 }

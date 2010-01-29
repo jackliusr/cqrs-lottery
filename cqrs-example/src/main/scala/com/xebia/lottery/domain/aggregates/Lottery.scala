@@ -38,8 +38,8 @@ class Lottery(
         
         customer.deductBalance(this.ticketPrice);
         apply(new LotteryTicketPurchasedEvent(
-          aggregate.getVersionedId(), 
-          customer.getVersionedId(), 
+          aggregate.versionedId, 
+          customer.versionedId, 
           generateTicketNumber()));
     }
 
@@ -51,13 +51,11 @@ class Lottery(
     def generateTicketNumber() = String.format("%06d", int2Integer(RANDOM.nextInt(1000000)));
 
     def onEvent(event: Event) {
-        if (event.isInstanceOf[LotteryCreatedEvent]) {
-            onLotteryCreatedEvent(event.asInstanceOf[LotteryCreatedEvent]);
-        } else if (event.isInstanceOf[LotteryTicketPurchasedEvent]) {
-            onTicketPurchasedEvent(event.asInstanceOf[LotteryTicketPurchasedEvent]);
-        } else {
-            throw new IllegalArgumentException("unrecognized event: " + event);
-        }
+      event match {
+        case event : LotteryCreatedEvent => onLotteryCreatedEvent(event)
+        case event : LotteryTicketPurchasedEvent => onTicketPurchasedEvent(event)
+        case _ => throw new IllegalArgumentException("unrecognized event: " + event)
+      }
     }
 
     private[Lottery] def onLotteryCreatedEvent(event: LotteryCreatedEvent) {
@@ -66,7 +64,6 @@ class Lottery(
     }
 
     private[Lottery] def onTicketPurchasedEvent(event: LotteryTicketPurchasedEvent) {
-        tickets + new LotteryTicket(aggregate, event.ticketNumber, event.customerId.getId());
+        tickets + new LotteryTicket(aggregate, event.ticketNumber, event.customerId.id);
     }
-
 }

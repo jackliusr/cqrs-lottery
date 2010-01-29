@@ -12,9 +12,9 @@ class CustomerBalanceChangedEventHandler(
     def apply(any : AnyRef) {
     	val message = any.asInstanceOf[CustomerBalanceChangedEvent]
         jdbcTemplate.update("update customer set version = ?, account_balance = ? where id = ?", 
-                long2Long(message.getAggregateRootId().getVersion()), 
-                double2Double(message.getNewBalance()), 
-                message.customerId.getId());
+                long2Long(message.aggregateRootId.version), 
+                double2Double(message.newBalance), 
+                message.customerId.id);
     }
 
 }

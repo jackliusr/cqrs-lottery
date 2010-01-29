@@ -6,6 +6,4 @@ import com.xebia.cqrs.domain.VersionedId;
 
 abstract class LotteryCommand(lotteryId : VersionedId) extends Command {
     Validate.notNull(lotteryId, "lotteryId is required");
-  
-    def getLotteryId() = lotteryId
 }

@@ -23,13 +23,13 @@ object RepositoryImpl {
   class AggregateRootSource(
           aggregateRoot: AggregateRoot
           ) extends EventSource[Event] {    
-    def getType() = aggregateRoot.getClass().getName();
+    def aType = aggregateRoot.getClass().getName()
 
-    def getVersion() = aggregateRoot.getVersionedId().getVersion();
+    def version = aggregateRoot.versionedId.version
 
-    def getTimestamp() = System.currentTimeMillis();
+    def timestamp = System.currentTimeMillis()
 
-    def getEvents() = aggregateRoot.getUnsavedEvents();
+    def events = aggregateRoot.unsavedEvents
   }
 
   class AggregateRootSink[T <: AggregateRoot](
@@ -124,38 +124,38 @@ class RepositoryImpl(
     }
 
     def getByVersionedId[T <: AggregateRoot](expectedType: Class[T], id: VersionedId): T = {
-      aggregatesById.get(id.getId) match {
+      aggregatesById.get(id.id) match {
         case Some(aggregate) => 
           	val result = expectedType.cast(aggregate)
-        	if (!id.nextVersion().equals(result.getVersionedId())) {
-	          throw new OptimisticLockingFailureException("actual: " + (result.getVersionedId().getVersion() - 1) + ", expected: " + id.getVersion());
+        	if (id.nextVersion() != result.versionedId) {
+	          throw new OptimisticLockingFailureException("actual: " + (result.versionedId.version - 1) + ", expected: " + id.version);
 	        }
 	        result;
         case None =>
           try {
-	        val sink = new RepositoryImpl.AggregateRootSink[T](expectedType, id.getId());
-	        eventStore.loadEventsFromExpectedStreamVersion(id.getId(), id.getVersion(), sink);
+	        val sink = new RepositoryImpl.AggregateRootSink[T](expectedType, id.id);
+	        eventStore.loadEventsFromExpectedStreamVersion(id.id, id.version, sink);
 	        val result = sink.getAggrateRoot();
 	        addToSession(result);
-	        return result;
+	        result;
 	      } catch {
 	        case ex: EmptyResultDataAccessException =>
-	          throw new AggregateRootNotFoundException(expectedType.getName(), id.getId());
+	          throw new AggregateRootNotFoundException(expectedType.getName(), id.id);
 	      }
       }
     }
 
     def add[T <: AggregateRoot](aggregate: T) {
-      if (aggregate.getUnsavedEvents().isEmpty) {
+      if (aggregate.unsavedEvents.isEmpty) {
         throw new IllegalArgumentException("aggregate has no unsaved changes");
       }
       addToSession(aggregate);
     }
 
     private def addToSession[T <: AggregateRoot](aggregate: T) {
-      aggregatesById.put(aggregate.getVersionedId().getId(), aggregate) match {
+      aggregatesById.put(aggregate.versionedId.id, aggregate) match {
         case Some(previous) if previous != aggregate => 
-          throw new IllegalStateException("multiple instances with same id " + aggregate.getVersionedId().getId());
+          throw new IllegalStateException("multiple instances with same id " + aggregate.versionedId.id);
         case _ => ()
       }
     }
@@ -163,12 +163,12 @@ class RepositoryImpl(
     def beforeHandleMessage() = ()
 
     def afterHandleMessage() {
-      val notifications = aggregatesById.values.toList.flatMap { _.getNotifications()};
+      val notifications = aggregatesById.values.toList.flatMap { _.notifications};
       aggregatesById.values.foreach {
         aggregate =>
           aggregate.clearNotifications();
 
-          val unsavedEvents = aggregate.getUnsavedEvents();
+          val unsavedEvents = aggregate.unsavedEvents;
           if (!unsavedEvents.isEmpty) {
             bus.publish(unsavedEvents);
             saveAggregate(aggregate);
@@ -181,14 +181,14 @@ class RepositoryImpl(
     }
 
     def saveAggregate(aggregate: AggregateRoot) {
-      if (aggregate.getVersionedId().isForInitialVersion()) {
+      if (aggregate.versionedId.isForInitialVersion()) {
         eventStore.createEventStream(
-          aggregate.getVersionedId().getId(),
+          aggregate.versionedId.id,
           new RepositoryImpl.AggregateRootSource(aggregate));
       } else {
         eventStore.storeEventsIntoStream(
-          aggregate.getVersionedId().getId(),
-          aggregate.getVersionedId().getVersion() - 1,
+          aggregate.versionedId.id,
+          aggregate.versionedId.version - 1,
           new RepositoryImpl.AggregateRootSource(aggregate));
       }
       aggregate.clearUnsavedEvents();

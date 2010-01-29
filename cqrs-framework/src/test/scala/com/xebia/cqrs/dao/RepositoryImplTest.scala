@@ -53,8 +53,8 @@ class RepositoryImplTest {
             fail("AggregateRootNotFoundException expected");
         }  catch { 
           case expected : AggregateRootNotFoundException => {
-            assertEquals(classOf[FakeAggregateRoot].getName(), expected.getAggregateRootType());
-            assertEquals(id.getId(), expected.getAggregateRootId());
+            assertEquals(classOf[FakeAggregateRoot].getName(), expected.aggregateRootType);
+            assertEquals(id.id, expected.aggregateRootId);
           }
         }
     }
@@ -71,7 +71,7 @@ class RepositoryImplTest {
     
     @Test
     def shouldLoadAggregateOnlyOnce() {
-        val a = subject.getById(classOf[FakeAggregateRoot], TEST_ID.getId());
+        val a = subject.getById(classOf[FakeAggregateRoot], TEST_ID.id);
 
         assertSame(aggregateRoot, a);
     }
@@ -124,7 +124,7 @@ class RepositoryImplTest {
     @Test
     def shouldPublishChangeEventsOnSave() {
         aggregateRoot.greetPerson("Erik");
-        val expectedUnsavedEvents = aggregateRoot.getUnsavedEvents() ::: List()
+        val expectedUnsavedEvents = aggregateRoot.unsavedEvents ::: List()
 
         subject.afterHandleMessage();
         
@@ -134,7 +134,7 @@ class RepositoryImplTest {
     @Test
     def shouldReplyWithNotificationsOnSave() {
         aggregateRoot.greetPerson("Erik");
-        val expectedNotifications = aggregateRoot.getNotifications() ::: List()
+        val expectedNotifications = aggregateRoot.notifications
         
         subject.afterHandleMessage();
         

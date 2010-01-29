@@ -21,7 +21,7 @@ class LocalInMemoryBusTest {
 	  def apply(arg : AnyRef) {
 	    val event = arg.asInstanceOf[TestEvent]
 		assertSame(event, LocalInMemoryBusTest.this.subject
-					.getCurrentMessage());
+					.currentMessage);
 		LocalInMemoryBusTest.this.testEventHandlerCalled = true;
 	  }
 	}
@@ -34,7 +34,7 @@ class LocalInMemoryBusTest {
 	  def apply(arg : AnyRef) {
 		val command = arg.asInstanceOf[TestCommand]
 	    assertSame(command, LocalInMemoryBusTest.this.subject
-				.getCurrentMessage());
+				.currentMessage);
 		this.lastMessage = command.message;
 		LocalInMemoryBusTest.this.testCommandHandlerCalled = true;
 	  }

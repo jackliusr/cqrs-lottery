@@ -17,7 +17,7 @@ class LotteriesPageTest extends LotteryPageTestCase {
     def testRenderMyPage() {
         EasyMock
           .expect(bus.sendAndWaitForResponse(EasyMock.isA(classOf[CreateLotteryCommand])))
-          .andReturn(new Response());
+          .andReturn(new Response(List()));
         replayMocks();
         
         // start and render the test page

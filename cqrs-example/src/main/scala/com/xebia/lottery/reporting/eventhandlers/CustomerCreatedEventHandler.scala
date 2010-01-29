@@ -14,8 +14,8 @@ class CustomerCreatedEventHandler(
     	val message = any.asInstanceOf[CustomerCreatedEvent]
         val info = message.info;
         jdbcTemplate.update("insert into customer(id, version, name, account_balance, email, street_name, house_number, postal_code, city, country) values (?, ?, ?, 0, ?, ?, ?, ?, ?, ?)", 
-                message.customerId.getId(), 
-                long2Long(message.customerId.getVersion()), 
+                message.customerId.id, 
+                long2Long(message.customerId.version), 
                 info.name, 
                 info.email, 
                 info.address.streetName,

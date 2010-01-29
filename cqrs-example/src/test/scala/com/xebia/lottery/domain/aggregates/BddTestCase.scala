@@ -11,7 +11,7 @@ import com.xebia.cqrs.domain.Event;
 
 object BddTestCase {
       protected[aggregates] def assertChange(aggregateRoot : AggregateRoot, expected: Event) {
-        val changes = aggregateRoot.getUnsavedEvents();
+        val changes = aggregateRoot.unsavedEvents;
         var matchedType : Event = null;
         changes.foreach { change =>
             if (change.equals(expected)) {

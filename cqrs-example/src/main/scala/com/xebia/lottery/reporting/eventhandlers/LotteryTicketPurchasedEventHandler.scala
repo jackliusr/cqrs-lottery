@@ -13,11 +13,11 @@ class LotteryTicketPurchasedEventHandler(
     	val message = any.asInstanceOf[LotteryTicketPurchasedEvent]
         jdbcTemplate.update("insert into ticket (number, lottery_id, customer_id) values (?, ?, ?)", 
                 message.ticketNumber, 
-                message.getAggregateRootId().getId(), 
-                message.customerId.getId());
+                message.aggregateRootId.id, 
+                message.customerId.id);
         jdbcTemplate.update("update lottery set version = ? where id = ?", 
-                long2Long(message.getAggregateRootId().getVersion()), 
-                message.getAggregateRootId().getId());
+                long2Long(message.aggregateRootId.version), 
+                message.aggregateRootId.id);
     }
 
 }

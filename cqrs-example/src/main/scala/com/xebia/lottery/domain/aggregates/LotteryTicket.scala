@@ -16,15 +16,14 @@ class LotteryTicket(
     var prizeAmount : Double = _;
 
     def win(prizeAmount: Double) {
-        apply(new LotteryTicketPrizeAwardedEvent(aggregate.getVersionedId(), number, customerId, prizeAmount));
+        apply(new LotteryTicketPrizeAwardedEvent(aggregate.versionedId, number, customerId, prizeAmount));
     }
 
     def onEvent(event: Event) {
-        if (event.isInstanceOf[LotteryTicketPrizeAwardedEvent]) {
-            onLotteryTicketPrizeAwarded(event.asInstanceOf[LotteryTicketPrizeAwardedEvent]);
-        } else {
-            throw new IllegalArgumentException("unrecognized event: " + event);
-        }
+      event match {
+        case event : LotteryTicketPrizeAwardedEvent => onLotteryTicketPrizeAwarded(event)
+        case _ => throw new IllegalArgumentException("unrecognized event: " + event)
+      }
     }
 
     private[LotteryTicket] def onLotteryTicketPrizeAwarded(event: LotteryTicketPrizeAwardedEvent) {

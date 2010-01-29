@@ -5,9 +5,4 @@ import com.xebia.cqrs.domain.VersionedId;
 case class PurchaseTicketCommand(
         val lotteryId: VersionedId,
         val customerId: VersionedId
-        ) extends Command {
-
-  def getLotteryId() = lotteryId
-
-  def getCustomerId() = customerId
-}
+) extends Command

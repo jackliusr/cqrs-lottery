@@ -7,4 +7,4 @@ class LotteryTicketPurchasedEvent(
 	lotteryId : VersionedId, 
 	val customerId : VersionedId, 
 	val ticketNumber : String
-) extends LotteryEvent(lotteryId, lotteryId.getId())
+) extends LotteryEvent(lotteryId, lotteryId.id)

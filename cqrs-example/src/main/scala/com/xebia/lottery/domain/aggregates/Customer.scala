@@ -25,24 +25,22 @@ class Customer(
 
     def deductBalance(amount : Double) {
         Validate.isTrue(isBalanceSufficient(amount), "insufficient balance");
-        apply(new CustomerBalanceChangedEvent(getVersionedId(), this.accountBalance, -amount, this.accountBalance - amount));
+        apply(new CustomerBalanceChangedEvent(versionedId, this.accountBalance, -amount, this.accountBalance - amount));
     }
 
     override def onEvent(event : Event) {
-        if (event.isInstanceOf[CustomerCreatedEvent]) {
-            onCustomerCreatedEvent(event.asInstanceOf[CustomerCreatedEvent]);
-        } else if (event.isInstanceOf[CustomerBalanceChangedEvent]) {
-            onCustomerBalanceChangedEvent(event.asInstanceOf[CustomerBalanceChangedEvent]);
-        } else {
-            throw new IllegalArgumentException("unrecognized event: " + event);
-        }
+    	event match {
+    	  case event : CustomerCreatedEvent => onCustomerCreatedEvent(event);
+    	  case event : CustomerBalanceChangedEvent => onCustomerBalanceChangedEvent(event);
+    	  case _ => throw new IllegalArgumentException("unrecognized event: " + event);
+    	}
     }
 
     private def onCustomerCreatedEvent(event: CustomerCreatedEvent) {
     }
 
     private def onCustomerBalanceChangedEvent(event: CustomerBalanceChangedEvent) {
-        this.accountBalance = event.getNewBalance();
+        this.accountBalance = event.newBalance;
     }
 
 }

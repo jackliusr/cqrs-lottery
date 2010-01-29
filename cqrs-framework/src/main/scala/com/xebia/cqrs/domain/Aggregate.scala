@@ -5,54 +5,52 @@ import collection._;
 import org.apache.commons.lang.Validate;
 
 class Aggregate(var versionedId : VersionedId) {
-
     var entitiesById = new mutable.HashMap[Any, Entity[_]]();
-    var unsavedEvents = new mutable.ArrayBuffer[Event]()
-    var notifications = new mutable.ArrayBuffer[Notification]();
-
+    
+    var _unsavedEvents = new mutable.ArrayBuffer[Event]()
+    def unsavedEvents = List(_unsavedEvents:_*)
+    
+    var _notifications = new mutable.ArrayBuffer[Notification]();
+    def notifications = List(_notifications:_*);
+    
     private[domain] def apply(event : Event) {
-        entitiesById.get(event.getEntityId()).foreach { entity =>
+        entitiesById.get(event.entityId).foreach { entity =>
           entity.onEvent(event);
-          unsavedEvents += event; 
+          _unsavedEvents += event; 
         }
     }
 
     private[domain] def notify(notification : Notification) {
         Validate.notNull(notification, "notification is required");
-        notifications += notification;
+        _notifications += notification;
     }
     
     def add[T <: Any](entity : Entity[T]) {
-        entitiesById + (entity.getId() -> entity);
+        entitiesById + (entity.id -> entity);
     }
     
     def remove(entity : Entity[_]) {
-        entitiesById -= entity.getId();
+        entitiesById -= entity.id;
     }
-    
-    def getVersionedId() = versionedId;
     
     def loadFromHistory(events : Seq[_ <: Event]) {
         events.foreach { event =>
             entitiesById
-                    .get(event.getEntityId())
+                    .get(event.entityId)
                     .foreach { entity => entity.onEvent(event) };
         }
     }
-
-    def getUnsavedEvents() = List(unsavedEvents:_*)
     
     def clearUnsavedEvents() {
-        unsavedEvents.clear();
+        _unsavedEvents.clear();
     }
     
     def incrementVersion() {
         versionedId = versionedId.nextVersion();
     }
 
-    def getNotifications() = List(notifications:_*);
     
     def clearNotifications() {
-        notifications.clear();
+        _notifications.clear();
     }
 }

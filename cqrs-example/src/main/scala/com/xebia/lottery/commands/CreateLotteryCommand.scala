@@ -9,7 +9,5 @@ case class CreateLotteryCommand(
         lotteryId: VersionedId,
         lotteryInfo: LotteryInfo
 ) extends LotteryCommand(lotteryId) {
-  Validate.notNull(lotteryInfo, "lotteryInfo is required");
-
-  def getInfo() = lotteryInfo;
+  Validate.notNull(lotteryInfo, "lotteryInfo is required")
 }

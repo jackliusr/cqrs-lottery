@@ -11,7 +11,7 @@ class CreateLotteryCommandHandler(
     
     def apply(any : AnyRef) {
     	val message = any.asInstanceOf[CreateLotteryCommand]
-        val lottery = new Lottery(message.getLotteryId(), message.getInfo());
+        val lottery = new Lottery(message.lotteryId, message.lotteryInfo);
         repository.add(lottery);
     }
 }
